@@ -1,6 +1,4 @@
-/* tslist implements a thread-safe singly linked list.  It is written for
-sshbf (https://github.com/kd5pbo/sshbf) and will probably not be feature-
-complete any time soon.  If you use it, feel free to send a pull request. */
+/* tslist implements a thread-safe singly linked list.  It is written for sshbf (https://github.com/kd5pbo/sshbf) and will probably not be feature-complete any time soon.  If you use it, feel free to send a pull request. */
 package tslist
 
 import (
@@ -51,11 +49,7 @@ func (l *List) Append(v interface{}) *Element {
 	return e
 }
 
-/* RemoveMarked sweeps through the list and calls Remove() on each element that
-is marked for removal.  Frequent additions to the list and scheduled removals
-may cause this to take a while.  It can be run asnychronously by wrapping it
-in a goroutine.  This runs in O(n) time, but not in a good way, and could
-probably use a re-write.  (hint, hint, people who found this on github).  */
+/* RemoveMarked sweeps through the list and calls Remove() on each element that is marked for removal.  Frequent additions to the list and scheduled removals may cause this to take a while.  It can be run asnychronously by wrapping it in a goroutine.  This runs in O(n) time, but not in a good way, and could probably use a re-write.  (hint, hint, people who found this on github).  */
 func (l *List) RemoveMarked() {
 	/* Keep trying until we get a clean sweep */
 	for done := true; !done; done = true {
@@ -101,11 +95,7 @@ func (e *Element) Next() *Element {
 	return next
 }
 
-/* RemoveMark marks an element for removal.  The element will not actually be
-removed, but it'll be transparently ignored by Next().  This saves a
-potentially costly exclusive lock on the list and up to three elements at a
-cost of more expensive traversal (which uses shared locks).  List's
-RemoveMarked function will delete all such marked elements. */
+/* RemoveMark marks an element for removal.  The element will not actually be removed, but it'll be transparently ignored by Next().  This saves a potentially costly exclusive lock on the list and up to three elements at a cost of more expensive traversal (which uses shared locks).  List's RemoveMarked function will delete all such marked elements. */
 func (e *Element) RemoveMark() {
 	e.m.Lock()
 	defer e.m.Unlock()
@@ -156,4 +146,11 @@ func (e *Element) Remove() {
 	/* If it's an internal element, unlink it from both sides. */
 	e.prev.next = e.next
 	e.next.prev = e.prev
+}
+
+/* Value returns the data stored in the element. */
+func (e *Element) Value() interface{} {
+	e.m.RLock()
+	defer e.m.RUnlock()
+	return e.value
 }
