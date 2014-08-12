@@ -46,12 +46,14 @@ func (l *List) Append(v interface{}) *Element {
 	e.prev = l.tail
 	/* The element is the new tail */
 	l.tail = e
+	/* Count */
+	l.size++
 	return e
 }
 
 /* PushBack is an alias for Append. */
 func (l *List) PushBack(v interface{}) *Element {
-        return l.Append(v)
+	return l.Append(v)
 }
 
 /* RemoveMarked sweeps through the list and calls Remove() on each element that is marked for removal.  Frequent additions to the list and scheduled removals may cause this to take a while.  It can be run asnychronously by wrapping it in a goroutine.  This runs in O(n) time, but not in a good way, and could probably use a re-write.  (hint, hint, people who found this on github).  */
@@ -72,12 +74,13 @@ func (l *List) RemoveMarked() {
 
 /* Element represents a list element. */
 type Element struct {
-	value  interface{}  /* Payload */
-	remove bool         /* Tag to mark element for removal */
-	m      sync.RWMutex /* Synchronization lock */
-	l      *List        /* Pointer to the parent list */
-	next   *Element     /* Next item in list */
-	prev   *Element     /* Previous item in list */
+	value   interface{}  /* Payload */
+	remove  bool         /* Tag to mark element for removal */
+	removed bool         /* Prevents double-removal */
+	m       sync.RWMutex /* Synchronization lock */
+	l       *List        /* Pointer to the parent list */
+	next    *Element     /* Next item in list */
+	prev    *Element     /* Previous item in list */
 }
 
 /* Value returns an element's Value */
@@ -116,6 +119,10 @@ func (e *Element) ToRemove() bool {
 
 /* Remove an element. */
 func (e *Element) Remove() {
+        /* Don't double-remove. */
+        if e.removed {
+                return
+        }
 	/* Lock the list in case it's the head or tail. */
 	e.l.m.Lock()
 	defer e.l.m.Unlock()
@@ -130,6 +137,9 @@ func (e *Element) Remove() {
 		e.next.m.Lock()
 		defer e.next.m.Unlock()
 	}
+        /* Mark the removal, decrase the element count. */
+        e.removed = true
+        e.l.size--
 	/* If it's the only item, empty the list. */
 	if nil == e.prev && e.next == nil {
 		e.l.head = nil
@@ -151,11 +161,4 @@ func (e *Element) Remove() {
 	/* If it's an internal element, unlink it from both sides. */
 	e.prev.next = e.next
 	e.next.prev = e.prev
-}
-
-/* Value returns the data stored in the element. */
-func (e *Element) Value() interface{} {
-	e.m.RLock()
-	defer e.m.RUnlock()
-	return e.value
 }
