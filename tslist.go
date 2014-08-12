@@ -49,6 +49,11 @@ func (l *List) Append(v interface{}) *Element {
 	return e
 }
 
+/* PushBack is an alias for Append. */
+func (l *List) PushBack(v interface{}) *Element {
+        return l.Append(v)
+}
+
 /* RemoveMarked sweeps through the list and calls Remove() on each element that is marked for removal.  Frequent additions to the list and scheduled removals may cause this to take a while.  It can be run asnychronously by wrapping it in a goroutine.  This runs in O(n) time, but not in a good way, and could probably use a re-write.  (hint, hint, people who found this on github).  */
 func (l *List) RemoveMarked() {
 	/* Keep trying until we get a clean sweep */
