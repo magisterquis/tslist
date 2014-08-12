@@ -26,6 +26,13 @@ func New() *List {
 	return l
 }
 
+/* Head returns the first element of the list. */
+func (l *List) Head() *Element {
+        l.m.RLock()
+        defer l.m.RUnlock()
+        return l.head
+}
+
 /* Append a value to the list and return the generated Element in O(1) time. */
 func (l *List) Append(v interface{}) *Element {
 	/* Make an element for the Value. */
@@ -119,10 +126,10 @@ func (e *Element) ToRemove() bool {
 
 /* Remove an element. */
 func (e *Element) Remove() {
-        /* Don't double-remove. */
-        if e.removed {
-                return
-        }
+	/* Don't double-remove. */
+	if e.removed {
+		return
+	}
 	/* Lock the list in case it's the head or tail. */
 	e.l.m.Lock()
 	defer e.l.m.Unlock()
@@ -137,9 +144,9 @@ func (e *Element) Remove() {
 		e.next.m.Lock()
 		defer e.next.m.Unlock()
 	}
-        /* Mark the removal, decrase the element count. */
-        e.removed = true
-        e.l.size--
+	/* Mark the removal, decrase the element count. */
+	e.removed = true
+	e.l.size--
 	/* If it's the only item, empty the list. */
 	if nil == e.prev && e.next == nil {
 		e.l.head = nil
