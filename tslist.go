@@ -2,6 +2,9 @@
 package tslist
 
 import (
+	"fmt"
+	"io"
+	"os"
 	"sync"
 )
 
@@ -28,9 +31,9 @@ func New() *List {
 
 /* Head returns the first element of the list. */
 func (l *List) Head() *Element {
-        l.m.RLock()
-        defer l.m.RUnlock()
-        return l.head
+	l.m.RLock()
+	defer l.m.RUnlock()
+	return l.head
 }
 
 /* Append a value to the list and return the generated Element in O(1) time. */
@@ -40,6 +43,8 @@ func (l *List) Append(v interface{}) *Element {
 	/* Make sure we have a head and tail. */
 	l.m.Lock()
 	defer l.m.Unlock()
+	/* Count */
+	defer func(){l.size++}()
 	if l.head == nil {
 		l.head = e
 		l.tail = e
@@ -53,8 +58,6 @@ func (l *List) Append(v interface{}) *Element {
 	e.prev = l.tail
 	/* The element is the new tail */
 	l.tail = e
-	/* Count */
-	l.size++
 	return e
 }
 
@@ -76,6 +79,18 @@ func (l *List) RemoveMarked() {
 			}
 			e = e.Next()
 		}
+	}
+}
+
+/* DebugPrint prints every element in the list to stdout.  This is meant for debugging purposes.  Production code should probably implement this better.  If w is not nil, the list will be output to w instead of stdout.  This is meant for easy diffing of two Lists. */
+func (l *List) DebugPrint(w io.Writer) {
+	/* Default to stdout */
+	if w == nil {
+		w = os.Stdout
+	}
+	for e := l.Head(); e != nil; e = e.Next() {
+		w.Write([]byte(fmt.Sprintf("[Element %#v]"+
+			"[Value (%T) %#v]\n", e, e.Value(), e.Value())))
 	}
 }
 
