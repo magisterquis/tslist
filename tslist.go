@@ -33,6 +33,9 @@ func New() *List {
 func (l *List) Head() *Element {
 	l.m.RLock()
 	defer l.m.RUnlock()
+        if l.head.ToRemove() {
+                return l.head.Next()
+        }
 	return l.head
 }
 
