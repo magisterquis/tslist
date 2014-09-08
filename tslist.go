@@ -33,9 +33,14 @@ func New() *List {
 func (l *List) Head() *Element {
 	l.m.RLock()
 	defer l.m.RUnlock()
-        if l.head.ToRemove() {
-                return l.head.Next()
+        /* Return nil if we have no head */
+        if l.head == nil {
+                return nil
         }
+        /* Keep trying until we get somewhere */
+	if l.head.ToRemove() {
+		return l.head.Next()
+	}
 	return l.head
 }
 
@@ -47,7 +52,7 @@ func (l *List) Append(v interface{}) *Element {
 	l.m.Lock()
 	defer l.m.Unlock()
 	/* Count */
-	defer func(){l.size++}()
+	defer func() { l.size++ }()
 	if l.head == nil {
 		l.head = e
 		l.tail = e
